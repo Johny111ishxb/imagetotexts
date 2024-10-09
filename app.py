@@ -32,21 +32,16 @@ def upload_file():
         try:
             # Determine the file extension and set file type accordingly
             file_ext = file.filename.split('.')[-1].lower()
-            file_type = ''
-            
-            if file_ext in ['png', 'jpg', 'jpeg']:
-                file_type = file_ext.upper() if file_ext != 'jpeg' else 'JPG'
-            else:
-                return jsonify({"error": "Unsupported file type"}), 400
+            file_type = file_ext.upper() if file_ext != 'jpeg' else 'JPG'
 
             # Sending image to OCR.Space API
             ocr_url = "https://api.ocr.space/parse/image"
             api_key = "153e0e5d8088957"  # Replace with your API key
             payload = {
                 'apikey': api_key,
-                'language': language,  # Allow user to set language (e.g., 'eng', 'ara', 'urd', etc.)
+                'language': language,
                 'isOverlayRequired': False,
-                'filetype': file_type  # Explicitly set file type
+                'filetype': file_type
             }
             files = {'file': file.read()}  # File content is read in binary form
 
@@ -60,8 +55,10 @@ def upload_file():
             if result.get("ParsedResults"):
                 return jsonify({"text": result["ParsedResults"][0]["ParsedText"]})
             else:
-                # If OCR fails, return the full response for debugging
                 return jsonify({"error": result.get("ErrorMessage", "OCR failed")}), 500
 
         except Exception as e:
             return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
