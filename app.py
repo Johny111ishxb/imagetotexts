@@ -1,7 +1,16 @@
+import os
+import firebase_admin
+from firebase_admin import credentials, storage
 from flask import Flask, request, jsonify, render_template
-import requests
 
+# Initialize Flask app
 app = Flask(__name__)
+
+# Initialize Firebase Admin SDK
+cred = credentials.Certificate("serviceAccountKey.json")
+firebase_admin.initialize_app(cred, {
+    'storageBucket': 'imagetotext-4c3e3.appspot.com'  # Replace with your Firebase project ID
+})
 
 @app.route('/')
 def index():
@@ -16,49 +25,26 @@ def upload_file():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
-    # Ensure the uploaded file is an image (optional but recommended)
     if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
         return jsonify({"error": "File format not supported. Please upload a PNG or JPG file."}), 400
 
-    # Get the language from the form (default to English if not provided)
-    language = request.form.get('language', 'eng')
+    try:
+        # Upload image to Firebase Storage
+        bucket = storage.bucket()
+        blob = bucket.blob(f"uploads/{file.filename}")
+        blob.upload_from_file(file, content_type=file.content_type)
 
-    # Validate that the language is supported by OCR.Space
-    supported_languages = ['eng', 'ara', 'chs', 'cht', 'urd', 'fil', 'kor', 'jpn', 'spa', 'fre', 'ger']
-    if language not in supported_languages:
-        return jsonify({"error": f"Language '{language}' is not supported."}), 400
+        # Get the public URL of the uploaded image
+        blob.make_public()
+        image_url = blob.public_url
 
-    if file:
-        try:
-            # Determine the file extension and set file type accordingly
-            file_ext = file.filename.split('.')[-1].lower()
-            file_type = file_ext.upper() if file_ext != 'jpeg' else 'JPG'
+        # Use image_url to send to OCR API
+        # ... (your OCR code here)
 
-            # Sending image to OCR.Space API
-            ocr_url = "https://api.ocr.space/parse/image"
-            api_key = "153e0e5d8088957"  # Replace with your API key
-            payload = {
-                'apikey': api_key,
-                'language': language,
-                'isOverlayRequired': False,
-                'filetype': file_type
-            }
-            files = {'file': file.read()}  # File content is read in binary form
+        return jsonify({"message": "File uploaded successfully", "image_url": image_url})
 
-            response = requests.post(ocr_url, data=payload, files=files)
-            result = response.json()
-
-            # Print the entire response for debugging
-            print(result)  # Debugging: check the full response
-
-            # Checking the response from the OCR API
-            if result.get("ParsedResults"):
-                return jsonify({"text": result["ParsedResults"][0]["ParsedText"]})
-            else:
-                return jsonify({"error": result.get("ErrorMessage", "OCR failed")}), 500
-
-        except Exception as e:
-            return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=3000)
