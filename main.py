@@ -39,7 +39,7 @@ def upload_file():
         image_url = blob.public_url
 
         # Use image_url to send to OCR API
-        # ... (your OCR code here)
+        # ... (Add your OCR code here)
 
         return jsonify({"message": "File uploaded successfully", "image_url": image_url})
 
