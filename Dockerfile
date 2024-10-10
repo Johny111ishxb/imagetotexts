@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Specify the command to run your app
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:3000", "main:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:$PORT", "main:app"]
