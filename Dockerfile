@@ -14,5 +14,5 @@ COPY . .
 # Expose the port your app runs on
 EXPOSE 3000
 
-# Command to run your application with reduced workers
-CMD ["sh", "-c", "gunicorn -w 1 -b 0.0.0.0:${PORT:-3000} server:app"]
+# Command to run your application
+CMD ["gunicorn", "-w", "1", "-b", "0.0.0.0:$PORT", "main:app"]
