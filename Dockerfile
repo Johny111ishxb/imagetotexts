@@ -1,18 +1,17 @@
 # Use the official Python image from the Docker Hub
-FROM python:3.10
+FROM python:3.9
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the requirements file and install dependencies in one step
+# Copy requirements file
 COPY requirements.txt .
+
+# Install the required packages
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
 COPY . .
 
-# Expose the port your app runs on
-EXPOSE 3000
-
-# Command to run your application
-CMD ["gunicorn", "-w", "1", "-b", "0.0.0.0:$PORT", "main:app"]
+# Specify the command to run your app
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:3000", "main:app"]
